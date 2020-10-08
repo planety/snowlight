@@ -1,5 +1,5 @@
 # starlight
-Flask like web framework writte in Nim.
+Flask like web framework written in Nim.
 
 ## Simple example
 
