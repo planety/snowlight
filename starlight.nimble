@@ -10,4 +10,4 @@ srcDir        = "src"
 # Dependencies
 
 requires "nim >= 1.2.6"
-requires "Prologue#4b7a391"
+requires "Prologue#head"
