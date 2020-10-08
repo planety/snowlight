@@ -1,2 +1,3 @@
 # starlight
-Full-stack web framework for Nim.
+Flask like web framework writte in Nim.
+
