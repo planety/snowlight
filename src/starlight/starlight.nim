@@ -1,523 +1,473 @@
 import std/macros
 
 import prologue
-
-export prologue except addRoute, head, get, put, post, delete, traces, options, connect, patch, all
-
-
-var app* = newApp(newSettings())
+export prologue
 
 
-macro route*(path: string, body: untyped) =
-  var handler: NimNode
+template setupRoute(body: NimNode): NimNode =
+  var `handler`: NimNode
   if body[3].kind == nnkHiddenStdConv:
-    handler = body[3][1]
+    `handler` = body[3][1]
   else:
-    handler = body[0]
+    `handler` = body[0]
+  `handler`
+
+macro route*(app: Prologue, path: string, body: untyped) =
+  let handler = setupRoute(body)
 
   result = quote do:
     app.addRoute(`path`, `handler`)
 
-macro route*(path: string, httpMethod: HttpMethod, body: untyped) =
-  var handler: NimNode
-  if body[3].kind == nnkHiddenStdConv:
-    handler = body[3][1]
-  else:
-    handler = body[0]
+macro route*(app: Prologue, path: string, httpMethod: HttpMethod, body: untyped) =
+  let handler = setupRoute(body)
 
   result = quote do:
     app.addRoute(`path`, `handler`, `httpMethod`)
 
-macro route*(path: string, httpMethod: HttpMethod, middlewares: openArray[HandlerAsync], 
+macro route*(app: Prologue, path: string, httpMethod: HttpMethod, middlewares: openArray[HandlerAsync], 
              body: untyped) =
-  var handler: NimNode
-  if body[3].kind == nnkHiddenStdConv:
-    handler = body[3][1]
-  else:
-    handler = body[0]
+  let handler = setupRoute(body)
 
   result = quote do:
     app.addRoute(`path`, `handler`, `httpMethod`, middlewares = `middlewares`)
 
-macro route*(path: string, httpMethod: HttpMethod,
+macro route*(app: Prologue, path: string, httpMethod: HttpMethod,
              middlewares: openArray[HandlerAsync], name: string,
              body: untyped) =
-  var handler: NimNode
-  if body[3].kind == nnkHiddenStdConv:
-    handler = body[3][1]
-  else:
-    handler = body[0]
+  let handler = setupRoute(body)
 
   result = quote do:
     app.addRoute(`path`, `handler`, `httpMethod`, `name`, `middlewares`)
 
-macro route*(path: string, httpMethod: HttpMethod,
-            middlewares: openArray[HandlerAsync], name: string,
-            settings: LocalSettings,
-            body: untyped) =
-  var handler: NimNode
-  if body[3].kind == nnkHiddenStdConv:
-    handler = body[3][1]
-  else:
-    handler = body[0]
-
-  result = quote do:
-    app.addRoute(`path`, `handler`, `httpMethod`, `name`, `middlewares`, `settings`)
-
-macro route*(path: string, httpMethod: openArray[HttpMethod], body: untyped) =
-  var handler: NimNode
-  if body[3].kind == nnkHiddenStdConv:
-    handler = body[3][1]
-  else:
-    handler = body[0]
+macro route*(app: Prologue, path: string, httpMethod: openArray[HttpMethod], body: untyped) =
+  let handler = setupRoute(body)
 
   result = quote do:
     app.addRoute(`path`, `handler`, `httpMethod`)
 
-macro route*(path: string, httpMethod: openArray[HttpMethod], middlewares: openArray[HandlerAsync], 
+macro route*(app: Prologue, path: string, httpMethod: openArray[HttpMethod], middlewares: openArray[HandlerAsync], 
              body: untyped) =
-  var handler: NimNode
-  if body[3].kind == nnkHiddenStdConv:
-    handler = body[3][1]
-  else:
-    handler = body[0]
+  let handler = setupRoute(body)
 
   result = quote do:
     app.addRoute(`path`, `handler`, `httpMethod`, middlewares = `middlewares`)
 
-macro route*(path: string, httpMethod: openArray[HttpMethod],
+macro route*(app: Prologue, path: string, httpMethod: openArray[HttpMethod],
              middlewares: openArray[HandlerAsync], name: string,
              body: untyped) =
-  var handler: NimNode
-  if body[3].kind == nnkHiddenStdConv:
-    handler = body[3][1]
-  else:
-    handler = body[0]
+  let handler = setupRoute(body)
 
   result = quote do:
     app.addRoute(`path`, `handler`, `httpMethod`, `name`, `middlewares`)
 
-macro route*(path: string, httpMethod: openArray[HttpMethod],
-            middlewares: openArray[HandlerAsync], name: string,
-            settings: LocalSettings,
-            body: untyped) =
-  var handler: NimNode
-  if body[3].kind == nnkHiddenStdConv:
-    handler = body[3][1]
-  else:
-    handler = body[0]
+# macro get*(app: Prologue, path: string, body: untyped) =  
+#   let `handler` = body[0].name
+
+#   result = quote do:
+#     prologue.get(app, path, `handler`)
+
+macro get*(app: Prologue, path: string, body: untyped) =
+  let handler = setupRoute(body)
 
   result = quote do:
-    app.addRoute(`path`, `handler`, `httpMethod`, `name`, `middlewares`, `settings`)
+    prologue.get(app, `path`, `handler`)
 
-macro get*(path: string, body: untyped) =
-  var handler: NimNode
-  if body[3].kind == nnkHiddenStdConv:
-    handler = body[3][1]
-  else:
-    handler = body[0]
+macro get*(app: Prologue, path: string, middlewares: openArray[HandlerAsync], 
+           body: untyped) =
+  let handler = setupRoute(body)
 
   result = quote do:
-    app.get(`path`, `handler`)
+    prologue.get(app, `path`, `handler`, middlewares = `middlewares`)
 
-macro get*(path: string, middlewares: openArray[HandlerAsync], 
-            body: untyped) =
-  var handler: NimNode
-  if body[3].kind == nnkHiddenStdConv:
-    handler = body[3][1]
-  else:
-    handler = body[0]
+macro get*(app: Prologue, path: string, middlewares: openArray[HandlerAsync], 
+           name: string, body: untyped) =
+  let handler = setupRoute(body)
 
   result = quote do:
-    app.get(`path`, `handler`, middlewares = `middlewares`)
+    prologue.get(app, `path`, `handler`, `name`, `middlewares`)
 
-macro get*(path: string, middlewares: openArray[HandlerAsync], 
-            name: string, body: untyped) =
-  var handler: NimNode
-  if body[3].kind == nnkHiddenStdConv:
-    handler = body[3][1]
-  else:
-    handler = body[0]
+macro post*(app: Prologue, path: string, body: untyped) =
+  let handler = setupRoute(body)
 
   result = quote do:
-    app.get(`path`, `handler`, get, `middlewares`)
-
-macro get*(path: string, middlewares: openArray[HandlerAsync], 
-            name: string, settings: LocalSettings,
-            body: untyped) =
-  var handler: NimNode
-  if body[3].kind == nnkHiddenStdConv:
-    handler = body[3][1]
-  else:
-    handler = body[0]
-
-  result = quote do:
-    app.get(`path`, `handler`, get, `middlewares`, `settings`)
-
-macro post*(path: string, body: untyped) =
-  var handler: NimNode
-  if body[3].kind == nnkHiddenStdConv:
-    handler = body[3][1]
-  else:
-    handler = body[0]
-
-  result = quote do:
-    app.post(`path`, `handler`)
+    prologue.post(app, `path`, `handler`)
 
 macro post*(path: string, middlewares: openArray[HandlerAsync], 
             body: untyped) =
-  var handler: NimNode
-  if body[3].kind == nnkHiddenStdConv:
-    handler = body[3][1]
-  else:
-    handler = body[0]
+  let handler = setupRoute(body)
 
   result = quote do:
-    app.post(`path`, `handler`, middlewares = `middlewares`)
+    prologue.post(app, path, `handler`, middlewares = middlewares)
 
-macro post*(path: string, middlewares: openArray[HandlerAsync], 
+macro post*(app: Prologue, path: string, middlewares: openArray[HandlerAsync], 
             name: string, body: untyped) =
-  var handler: NimNode
-  if body[3].kind == nnkHiddenStdConv:
-    handler = body[3][1]
-  else:
-    handler = body[0]
+  let handler = setupRoute(body)
 
   result = quote do:
-    app.post(`path`, `handler`, post, `middlewares`)
+    prologue.post(app, `path`, `handler`, `name`, `middlewares`)
 
-macro post*(path: string, middlewares: openArray[HandlerAsync], 
-            name: string, settings: LocalSettings,
+macro put*(app: Prologue, path: string, body: untyped) =
+  let handler = setupRoute(body)
+
+  result = quote do:
+    prologue.put(app, path, `handler`)
+
+macro put*(app: Prologue, path: string, middlewares: openArray[HandlerAsync], 
             body: untyped) =
-  var handler: NimNode
-  if body[3].kind == nnkHiddenStdConv:
-    handler = body[3][1]
-  else:
-    handler = body[0]
+  let handler = setupRoute(body)
 
   result = quote do:
-    app.post(`path`, `handler`, post, `middlewares`, `settings`)
+    prologue.put(app, `path`, `handler`, middlewares = `middlewares`)
 
-macro put*(path: string, body: untyped) =
-  var handler: NimNode
-  if body[3].kind == nnkHiddenStdConv:
-    handler = body[3][1]
-  else:
-    handler = body[0]
-
-  result = quote do:
-    app.put(`path`, `handler`)
-
-macro put*(path: string, middlewares: openArray[HandlerAsync], 
-            body: untyped) =
-  var handler: NimNode
-  if body[3].kind == nnkHiddenStdConv:
-    handler = body[3][1]
-  else:
-    handler = body[0]
-
-  result = quote do:
-    app.put(`path`, `handler`, middlewares = `middlewares`)
-
-macro put*(path: string, middlewares: openArray[HandlerAsync], 
+macro put*(app: Prologue, path: string, middlewares: openArray[HandlerAsync], 
             name: string, body: untyped) =
-  var handler: NimNode
-  if body[3].kind == nnkHiddenStdConv:
-    handler = body[3][1]
-  else:
-    handler = body[0]
+  let handler = setupRoute(body)
 
   result = quote do:
-    app.put(`path`, `handler`, put, `middlewares`)
+    prologue.put(app, `path`, `handler`, `name`, `middlewares`)
 
-macro put*(path: string, middlewares: openArray[HandlerAsync], 
-            name: string, settings: LocalSettings,
+macro delete*(app: Prologue, path: string, body: untyped) =
+  let handler = setupRoute(body)
+
+  result = quote do:
+    prologue.delete(app, `path`, `handler`)
+
+macro delete*(app: Prologue, path: string, middlewares: openArray[HandlerAsync], 
             body: untyped) =
-  var handler: NimNode
-  if body[3].kind == nnkHiddenStdConv:
-    handler = body[3][1]
-  else:
-    handler = body[0]
+  let handler = setupRoute(body)
 
   result = quote do:
-    app.put(`path`, `handler`, put, `middlewares`, `settings`)
+    prologue.delete(app, `path`, `handler`, middlewares = `middlewares`)
 
-macro delete*(path: string, body: untyped) =
-  var handler: NimNode
-  if body[3].kind == nnkHiddenStdConv:
-    handler = body[3][1]
-  else:
-    handler = body[0]
-
-  result = quote do:
-    app.delete(`path`, `handler`)
-
-macro delete*(path: string, middlewares: openArray[HandlerAsync], 
-            body: untyped) =
-  var handler: NimNode
-  if body[3].kind == nnkHiddenStdConv:
-    handler = body[3][1]
-  else:
-    handler = body[0]
-
-  result = quote do:
-    app.delete(`path`, `handler`, middlewares = `middlewares`)
-
-macro delete*(path: string, middlewares: openArray[HandlerAsync], 
+macro delete*(app: Prologue, path: string, middlewares: openArray[HandlerAsync], 
             name: string, body: untyped) =
-  var handler: NimNode
-  if body[3].kind == nnkHiddenStdConv:
-    handler = body[3][1]
-  else:
-    handler = body[0]
+  let handler = setupRoute(body)
 
   result = quote do:
-    app.delete(`path`, `handler`, delete, `middlewares`)
+    prologue.delete(app, `path`, `handler`, `name`, `middlewares`)
 
-macro delete*(path: string, middlewares: openArray[HandlerAsync], 
-            name: string, settings: LocalSettings,
+macro trace*(app: Prologue, path: string, body: untyped) =
+  let handler = setupRoute(body)
+
+  result = quote do:
+    prologue.trace(app, `path`, `handler`)
+
+macro trace*(app: Prologue, path: string, middlewares: openArray[HandlerAsync], 
             body: untyped) =
-  var handler: NimNode
-  if body[3].kind == nnkHiddenStdConv:
-    handler = body[3][1]
-  else:
-    handler = body[0]
+  let handler = setupRoute(body)
 
   result = quote do:
-    app.delete(`path`, `handler`, delete, `middlewares`, `settings`)
+    prologue.trace(app, `path`, `handler`, middlewares = `middlewares`)
 
-macro trace*(path: string, body: untyped) =
-  var handler: NimNode
-  if body[3].kind == nnkHiddenStdConv:
-    handler = body[3][1]
-  else:
-    handler = body[0]
-
-  result = quote do:
-    app.trace(`path`, `handler`)
-
-macro trace*(path: string, middlewares: openArray[HandlerAsync], 
-            body: untyped) =
-  var handler: NimNode
-  if body[3].kind == nnkHiddenStdConv:
-    handler = body[3][1]
-  else:
-    handler = body[0]
-
-  result = quote do:
-    app.trace(`path`, `handler`, middlewares = `middlewares`)
-
-macro trace*(path: string, middlewares: openArray[HandlerAsync], 
+macro trace*(app: Prologue, path: string, middlewares: openArray[HandlerAsync], 
             name: string, body: untyped) =
-  var handler: NimNode
-  if body[3].kind == nnkHiddenStdConv:
-    handler = body[3][1]
-  else:
-    handler = body[0]
+  let handler = setupRoute(body)
 
   result = quote do:
-    app.trace(`path`, `handler`, trace, `middlewares`)
+    prologue.trace(app, `path`, `handler`, `name`, `middlewares`)
 
-macro trace*(path: string, middlewares: openArray[HandlerAsync], 
-            name: string, settings: LocalSettings,
+macro options*(app: Prologue, path: string, body: untyped) =
+  let handler = setupRoute(body)
+
+  result = quote do:
+    prologue.options(app, `path`, `handler`)
+
+macro options*(app: Prologue, path: string, middlewares: openArray[HandlerAsync], 
             body: untyped) =
-  var handler: NimNode
-  if body[3].kind == nnkHiddenStdConv:
-    handler = body[3][1]
-  else:
-    handler = body[0]
+  let handler = setupRoute(body)
 
   result = quote do:
-    app.trace(`path`, `handler`, trace, `middlewares`, `settings`)
+    prologue.options(app, `path`, `handler`, middlewares = `middlewares`)
 
-macro options*(path: string, body: untyped) =
-  var handler: NimNode
-  if body[3].kind == nnkHiddenStdConv:
-    handler = body[3][1]
-  else:
-    handler = body[0]
-
-  result = quote do:
-    app.options(`path`, `handler`)
-
-macro options*(path: string, middlewares: openArray[HandlerAsync], 
-            body: untyped) =
-  var handler: NimNode
-  if body[3].kind == nnkHiddenStdConv:
-    handler = body[3][1]
-  else:
-    handler = body[0]
-
-  result = quote do:
-    app.options(`path`, `handler`, middlewares = `middlewares`)
-
-macro options*(path: string, middlewares: openArray[HandlerAsync], 
+macro options*(app: Prologue, path: string, middlewares: openArray[HandlerAsync], 
             name: string, body: untyped) =
-  var handler: NimNode
-  if body[3].kind == nnkHiddenStdConv:
-    handler = body[3][1]
-  else:
-    handler = body[0]
+  let handler = setupRoute(body)
 
   result = quote do:
-    app.options(`path`, `handler`, options, `middlewares`)
+    prologue.options(app, `path`, `handler`, `name`, `middlewares`)
 
-macro options*(path: string, middlewares: openArray[HandlerAsync], 
-            name: string, settings: LocalSettings,
+macro connect*(app: Prologue, path: string, body: untyped) =
+  let handler = setupRoute(body)
+
+  result = quote do:
+    prologue.connect(app, `path`, `handler`)
+
+macro connect*(app: Prologue, path: string, middlewares: openArray[HandlerAsync], 
             body: untyped) =
-  var handler: NimNode
-  if body[3].kind == nnkHiddenStdConv:
-    handler = body[3][1]
-  else:
-    handler = body[0]
+  let handler = setupRoute(body)
 
   result = quote do:
-    app.options(`path`, `handler`, options, `middlewares`, `settings`)
+    prologue.connect(app, `path`, `handler`, middlewares = `middlewares`)
 
-macro connect*(path: string, body: untyped) =
-  var handler: NimNode
-  if body[3].kind == nnkHiddenStdConv:
-    handler = body[3][1]
-  else:
-    handler = body[0]
-
-  result = quote do:
-    app.connect(`path`, `handler`)
-
-macro connect*(path: string, middlewares: openArray[HandlerAsync], 
-            body: untyped) =
-  var handler: NimNode
-  if body[3].kind == nnkHiddenStdConv:
-    handler = body[3][1]
-  else:
-    handler = body[0]
-
-  result = quote do:
-    app.connect(`path`, `handler`, middlewares = `middlewares`)
-
-macro connect*(path: string, middlewares: openArray[HandlerAsync], 
+macro connect*(app: Prologue, path: string, middlewares: openArray[HandlerAsync], 
             name: string, body: untyped) =
-  var handler: NimNode
-  if body[3].kind == nnkHiddenStdConv:
-    handler = body[3][1]
-  else:
-    handler = body[0]
+  let handler = setupRoute(body)
 
   result = quote do:
-    app.connect(`path`, `handler`, connect, `middlewares`)
+    prologue.connect(app, `path`, `handler`, `name`, `middlewares`)
 
-macro connect*(path: string, middlewares: openArray[HandlerAsync], 
-            name: string, settings: LocalSettings,
+macro patch*(app: Prologue, path: string, body: untyped) =
+  let handler = setupRoute(body)
+
+  result = quote do:
+    prologue.patch(app, `path`, `handler`)
+
+macro patch*(app: Prologue, path: string, middlewares: openArray[HandlerAsync], 
             body: untyped) =
-  var handler: NimNode
-  if body[3].kind == nnkHiddenStdConv:
-    handler = body[3][1]
-  else:
-    handler = body[0]
+  let handler = setupRoute(body)
 
   result = quote do:
-    app.connect(`path`, `handler`, connect, `middlewares`, `settings`)
+    prologue.patch(app, `path`, `handler`, middlewares = `middlewares`)
 
-macro patch*(path: string, body: untyped) =
-  var handler: NimNode
-  if body[3].kind == nnkHiddenStdConv:
-    handler = body[3][1]
-  else:
-    handler = body[0]
-
-  result = quote do:
-    app.patch(`path`, `handler`)
-
-macro patch*(path: string, middlewares: openArray[HandlerAsync], 
-            body: untyped) =
-  var handler: NimNode
-  if body[3].kind == nnkHiddenStdConv:
-    handler = body[3][1]
-  else:
-    handler = body[0]
-
-  result = quote do:
-    app.patch(`path`, `handler`, middlewares = `middlewares`)
-
-macro patch*(path: string, middlewares: openArray[HandlerAsync], 
+macro patch*(app: Prologue, path: string, middlewares: openArray[HandlerAsync], 
             name: string, body: untyped) =
-  var handler: NimNode
-  if body[3].kind == nnkHiddenStdConv:
-    handler = body[3][1]
-  else:
-    handler = body[0]
+  let handler = setupRoute(body)
 
   result = quote do:
-    app.patch(`path`, `handler`, patch, `middlewares`)
+    prologue.patch(app, `path`, `handler`, `name`, `middlewares`)
 
-macro patch*(path: string, middlewares: openArray[HandlerAsync], 
-            name: string, settings: LocalSettings,
+macro all*(app: Prologue, path: string, body: untyped) =
+  let handler = setupRoute(body)
+
+  result = quote do:
+    prologue.all(app, `path`, `handler`)
+
+macro all*(app: Prologue, path: string, middlewares: openArray[HandlerAsync], 
             body: untyped) =
-  var handler: NimNode
-  if body[3].kind == nnkHiddenStdConv:
-    handler = body[3][1]
-  else:
-    handler = body[0]
+  let handler = setupRoute(body)
 
   result = quote do:
-    app.patch(`path`, `handler`, patch, `middlewares`, `settings`)
+    prologue.all(app, `path`, `handler`, middlewares = `middlewares`)
 
-macro all*(path: string, body: untyped) =
-  var handler: NimNode
-  if body[3].kind == nnkHiddenStdConv:
-    handler = body[3][1]
-  else:
-    handler = body[0]
-
-  result = quote do:
-    app.all(`path`, `handler`)
-
-macro all*(path: string, middlewares: openArray[HandlerAsync], 
-            body: untyped) =
-  var handler: NimNode
-  if body[3].kind == nnkHiddenStdConv:
-    handler = body[3][1]
-  else:
-    handler = body[0]
-
-  result = quote do:
-    app.all(`path`, `handler`, middlewares = `middlewares`)
-
-macro all*(path: string, middlewares: openArray[HandlerAsync], 
+macro all*(app: Prologue, path: string, middlewares: openArray[HandlerAsync], 
             name: string, body: untyped) =
-  var handler: NimNode
-  if body[3].kind == nnkHiddenStdConv:
-    handler = body[3][1]
-  else:
-    handler = body[0]
+  let handler = setupRoute(body)
 
   result = quote do:
-    app.all(`path`, `handler`, all, `middlewares`)
+    prologue.all(app, `path`, `handler`, `name`, `middlewares`)
 
-macro all*(path: string, middlewares: openArray[HandlerAsync], 
-            name: string, settings: LocalSettings,
-            body: untyped) =
-  var handler: NimNode
-  if body[3].kind == nnkHiddenStdConv:
-    handler = body[3][1]
-  else:
-    handler = body[0]
+# Group API
 
-  result = quote do:
-    app.all(`path`, `handler`, all, `middlewares`, `settings`)
+# macro route*(group: Group, path: string, body: untyped) =
+#   result = quote do:
+#     let (path, allMiddlewares) = getAllInfos(`group`, `path`, @[])
+#     route(group.app, `path`, `body`)
 
-proc registerApp*(
-  app: Prologue,
-  settings: Settings, 
-  middlewares: openArray[HandlerAsync] = @[],
-  startup: openArray[Event] = @[], 
-  shutdown: openArray[Event] = @[],
-  errorHandlerTable = newErrorHandlerTable({Http404: default404Handler, Http500: default500Handler}),
-  appData = newStringTable(mode = modeCaseSensitive)
-) =
-  app.gscope.settings = settings
-  app.middlewares = @middlewares
-  app.startup = @startup
-  app.shutdown = @shutdown
-  app.errorHandlerTable = errorHandlerTable
-  app.gscope.appData = appData
+# macro route*(group: Group, path: string, httpMethod: HttpMethod, body: untyped) =
+#   result = quote do:
+#     let (path, middlewares) = getAllInfos(`group`, `path`, @[])
+#     route(group.app, path, `body`, `httpMethod`)
+
+# macro route*(group: Group, path: string, httpMethod: HttpMethod, middlewares: openArray[HandlerAsync], 
+#              body: untyped) =
+#   result = quote do:
+#     let (path, middlewares) = getAllInfos(`group`, `path`, @[])
+#     route(group.app, path, `body`, `httpMethod`, middlewares)
+
+# macro route*(group: Group, path: string, httpMethod: HttpMethod,
+#              middlewares: openArray[HandlerAsync], name: string,
+#              body: untyped) =
+#   result = quote do:
+#     let (path, middlewares) = getAllInfos(`group`, `path`, @[])
+#     route(group.app, `path`, `body`)
+
+# macro route*(group: Group, path: string, httpMethod: openArray[HttpMethod], body: untyped) =
+#   let handler = setupRoute(body)
+
+#   result = quote do:
+#     app.addRoute(path, `handler`, `httpMethod`)
+
+# macro route*(group: Group, path: string, httpMethod: openArray[HttpMethod], middlewares: openArray[HandlerAsync], 
+#              body: untyped) =
+#   let handler = setupRoute(body)
+
+#   result = quote do:
+#     app.addRoute(path, `handler`, `httpMethod`, middlewares = `middlewares`)
+
+# macro route*(group: Group, path: string, httpMethod: openArray[HttpMethod],
+#              middlewares: openArray[HandlerAsync], name: string,
+#              body: untyped) =
+#   let handler = setupRoute(body)
+
+#   result = quote do:
+#     app.addRoute(path, `handler`, `httpMethod`, `name`, `middlewares`)
+
+# macro get*(group: Group, path: string, body: untyped) =  
+#   let `handler` = body[0].name
+
+#   result = quote do:
+#     prologue.get(app, path, `handler`)
+
+# macro get*(group: Group, path: string, middlewares: openArray[HandlerAsync], 
+#            body: untyped) =
+#   let handler = setupRoute(body)
+
+#   result = quote do:
+#     prologue.get(app, path, `handler`, middlewares = middlewares)
+
+# macro get*(group: Group, path: string, middlewares: openArray[HandlerAsync], 
+#            name: string, body: untyped) =
+#   let handler = setupRoute(body)
+
+#   result = quote do:
+#     prologue.get(app, path, `handler`, name, middlewares)
+
+# macro post*(group: Group, path: string, body: untyped) =
+#   let handler = setupRoute(body)
+
+#   result = quote do:
+#     prologue.post(app, `path`, `handler`)
+
+# macro post*(group: Group,path: string, middlewares: openArray[HandlerAsync], 
+#             body: untyped) =
+#   let handler = setupRoute(body)
+
+#   result = quote do:
+#     prologue.post(app, `path`, `handler`, middlewares = `middlewares`)
+
+# macro post*(group: Group, path: string, middlewares: openArray[HandlerAsync], 
+#             name: string, body: untyped) =
+#   let handler = setupRoute(body)
+
+#   result = quote do:
+#     prologue.post(app, path, `handler`, name, middlewares)
+
+# macro put*(group: Group, path: string, body: untyped) =
+#   let handler = setupRoute(body)
+
+#   result = quote do:
+#     prologue.put(app, path, `handler`)
+
+# macro put*(group: Group, path: string, middlewares: openArray[HandlerAsync], 
+#             body: untyped) =
+#   let handler = setupRoute(body)
+
+#   result = quote do:
+#     prologue.put(app, path, `handler`, middlewares = middlewares)
+
+# macro put*(group: Group, path: string, middlewares: openArray[HandlerAsync], 
+#             name: string, body: untyped) =
+#   let handler = setupRoute(body)
+
+#   result = quote do:
+#     prologue.put(app, path, `handler`, name, middlewares)
+
+# macro delete*(group: Group, path: string, body: untyped) =
+#   let handler = setupRoute(body)
+
+#   result = quote do:
+#     prologue.delete(app, path, `handler`)
+
+# macro delete*(group: Group, path: string, middlewares: openArray[HandlerAsync], 
+#             body: untyped) =
+#   let handler = setupRoute(body)
+
+#   result = quote do:
+#     prologue.delete(app, path, `handler`, middlewares = middlewares)
+
+# macro delete*(group: Group, path: string, middlewares: openArray[HandlerAsync], 
+#             name: string, body: untyped) =
+#   let handler = setupRoute(body)
+
+#   result = quote do:
+#     prologue.delete(app, path, `handler`, name, middlewares)
+
+# macro trace*(group: Group, path: string, body: untyped) =
+#   let handler = setupRoute(body)
+
+#   result = quote do:
+#     prologue.trace(app, path, `handler`)
+
+# macro trace*(group: Group, path: string, middlewares: openArray[HandlerAsync], 
+#             body: untyped) =
+#   let handler = setupRoute(body)
+
+#   result = quote do:
+#     prologue.trace(app, path, `handler`, middlewares = middlewares)
+
+# macro trace*(group: Group, path: string, middlewares: openArray[HandlerAsync], 
+#             name: string, body: untyped) =
+#   let handler = setupRoute(body)
+
+#   result = quote do:
+#     prologue.trace(app, path, `handler`, name, middlewares)
+
+# macro options*(group: Group, path: string, body: untyped) =
+#   let handler = setupRoute(body)
+
+#   result = quote do:
+#     prologue.options(app, path, `handler`)
+
+# macro options*(group: Group, path: string, middlewares: openArray[HandlerAsync], 
+#             body: untyped) =
+#   let handler = setupRoute(body)
+
+#   result = quote do:
+#     prologue.options(app, path, `handler`, middlewares = middlewares)
+
+# macro options*(group: Group, path: string, middlewares: openArray[HandlerAsync], 
+#             name: string, body: untyped) =
+#   let handler = setupRoute(body)
+
+#   result = quote do:
+#     prologue.options(app, path, `handler`, name, middlewares)
+
+# macro connect*(group: Group, path: string, body: untyped) =
+#   let handler = setupRoute(body)
+
+#   result = quote do:
+#     prologue.connect(app, path, `handler`)
+
+# macro connect*(group: Group, path: string, middlewares: openArray[HandlerAsync], 
+#             body: untyped) =
+#   let handler = setupRoute(body)
+
+#   result = quote do:
+#     prologue.connect(app, path, `handler`, middlewares = middlewares)
+
+# macro connect*(group: Group, path: string, middlewares: openArray[HandlerAsync], 
+#             name: string, body: untyped) =
+#   let handler = setupRoute(body)
+
+#   result = quote do:
+#     prologue.connect(app, path, `handler`, name, middlewares)
+
+# macro patch*(group: Group, path: string, body: untyped) =
+#   let handler = setupRoute(body)
+
+#   result = quote do:
+#     prologue.patch(app, path, `handler`)
+
+# macro patch*(group: Group, path: string, middlewares: openArray[HandlerAsync], 
+#             body: untyped) =
+#   let handler = setupRoute(body)
+
+#   result = quote do:
+#     prologue.patch(app, path, `handler`, middlewares = middlewares)
+
+# macro patch*(group: Group, path: string, middlewares: openArray[HandlerAsync], 
+#             name: string, body: untyped) =
+#   let handler = setupRoute(body)
+
+#   result = quote do:
+#     prologue.patch(app, path, `handler`, name, middlewares)
+
+# macro all*(group: Group, path: string, body: untyped) =
+#   let handler = setupRoute(body)
+
+#   result = quote do:
+#     prologue.all(app, path, `handler`)
+
+# macro all*(group: Group, path: string, middlewares: openArray[HandlerAsync], 
+#             body: untyped) =
+#   let handler = setupRoute(body)
+
+#   result = quote do:
+#     prologue.all(app, path, `handler`, middlewares = middlewares)
+
+# macro all*(group: Group, path: string, middlewares: openArray[HandlerAsync], 
+#             name: string, body: untyped) =
+#   let handler = setupRoute(body)
+
+#   result = quote do:
+#     prologue.all(app, path, `handler`, name, middlewares)
